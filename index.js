@@ -35,7 +35,7 @@ async function run() {
 
     const menuCollection = client.db("bistroDb").collection("menu");
     const reviewCollection = client.db("bistroDb").collection("reviews");
-
+    const cartCollection = client.db("bistroDb").collection("carts");
 
     app.get('/menu',async(req,res)=>{
     const result =await menuCollection.find().toArray();
@@ -46,6 +46,33 @@ async function run() {
     const result =await reviewCollection.find().toArray();
     res.send(result)
     })
+
+
+    app.get('/carts/:email',async(req,res)=>{
+      const email = req.params.email
+      // console.log(email)
+      const filter = {email:email}
+      const result = await cartCollection.find(filter).toArray();
+      // console.log('line 55',result)
+      res.send(result)
+    })
+    // app.get('/carts',async(req,res)=>{
+    //   const email = req.query.email
+    //   const query ={email:email}
+    //   // console.log(email)
+    //   const result = await cartCollection.find(query).toArray();
+    //   console.log(result)
+    //   res.send(result)
+    // })
+
+    app.post('/cart',async (req,res)=>{
+      const cart = req.body
+      const result = await cartCollection.insertOne(cart);
+      console.log(result)
+      res.send(result)
+    })
+  
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
