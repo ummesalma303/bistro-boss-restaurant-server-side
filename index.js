@@ -36,7 +36,22 @@ async function run() {
     const menuCollection = client.db("bistroDb").collection("menu");
     const reviewCollection = client.db("bistroDb").collection("reviews");
     const cartCollection = client.db("bistroDb").collection("carts");
+    const userCollection = client.db("bistroDb").collection("users");
 
+
+
+    /* ---------------------------------- users --------------------------------- */
+    app.post('/users',async (req,res)=>{
+      const users = req.body
+      const result = await userCollection.insertOne(users);
+      console.log(result)
+      res.send(result)
+    })
+
+
+
+
+    /* ---------------------------------- menu ---------------------------------- */
     app.get('/menu',async(req,res)=>{
     const result =await menuCollection.find().toArray();
     res.send(result)
