@@ -211,10 +211,7 @@ async function run() {
 
     app.post('/create-payment-intent',async (req,res) => {
      const {price} = req.body;
-    //  console.log(price)
      const amount = parseInt(price * 100)
-    //  console.log('215',amount)
-     //  res.send(amount)
      const paymentIntent = await stripe.paymentIntents.create({
        amount: amount,
        currency: "usd",
@@ -227,13 +224,16 @@ async function run() {
 
     app.get('/payment/:email',verifyToken,async (req,res)=>{
       const email = req.params.email
-      if (email !== req.decoded.email) {
-        return res.status(403).send({ message: 'forbidden access' });
+      // console.log(email)
+      // console.log(req.decoded.email)
+      if (email !== req.decoded.user.email) {
+        return res.status(403).send({ message: 'forbidden access'});
       }
       const query = {email}
       const result = await paymentCollection.find(query).toArray()
       res.send(result)
     })
+
     app.post('/payment',async(req,res)=>{
      const data = req.body
      console.log(data)
@@ -250,6 +250,28 @@ async function run() {
       res.status(200).send({paymentResult,deleteResult})
     })
 
+    /* --------------------------- stats or analytics --------------------------- */
+    app.get('/admin-stats',async(req,res)=>{
+      const user = await userCollection.estimatedDocumentCount()
+      const product = await menuCollection.estimatedDocumentCount()
+      const order = await paymentCollection.estimatedDocumentCount()
+
+      // this is not the best way
+      // const payments = await paymentCollection.find().toArray()
+      // const revenue =  payments.reduce((total,payment)=>total + payment.price,0)
+      const result = await paymentCollection.aggregate([
+        {
+          $group:{
+            _id:null,
+            totalRevenue:{
+              $sum:'$price'
+            }
+          }
+        }
+      ]).toArray()
+      const revenue = result?.length > 0 ? result[0].totalRevenue :0
+      res.send({user,product,order,revenue})
+    })
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
