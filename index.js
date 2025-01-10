@@ -207,7 +207,7 @@ async function run() {
       res.send(result)
     })
 
-    /* --------------------------------- stripe --------------------------------- */
+    /* --------------------------------- stripe payment --------------------------------- */
 
     app.post('/create-payment-intent',async (req,res) => {
      const {price} = req.body;
@@ -224,7 +224,17 @@ async function run() {
       res.send({ clientSecret: paymentIntent.client_secret,})
     })
 
-    app.post('/payment',verifyToken,async(req,res)=>{
+
+    app.get('/payment/:email',verifyToken,async (req,res)=>{
+      const email = req.params.email
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      const query = {email}
+      const result = await paymentCollection.find(query).toArray()
+      res.send(result)
+    })
+    app.post('/payment',async(req,res)=>{
      const data = req.body
      console.log(data)
      const paymentResult = await paymentCollection.insertOne(data)
