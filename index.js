@@ -251,6 +251,36 @@ async function run() {
     })
 
     /* --------------------------- stats or analytics --------------------------- */
+     // using aggregate pipeline
+    app.get('/order-stats',async (req,res) => {
+      const result = await paymentCollection.aggregate([
+        {$unwind:'$menuId'},
+        {
+          $lookup:{
+            from:'menu',
+            localField:'menuId',
+            foreignField:'_id',
+            as: 'menuItems'
+          }
+        },
+        {$unwind:'$menuItems'},
+        {$group:{
+          _id:'$menuItems.category',
+          quantity:{$sum:1},
+          revenue: {$sum: '$menuItems.price'} 
+        }},
+        {
+          $project:{
+            _id:0,
+            category:"$_id",
+            quantity:"$quantity",
+          revenue:'$revenue'
+          }
+        }
+      ]).toArray()
+
+      res.send(result)
+    })
     app.get('/admin-stats',async(req,res)=>{
       const user = await userCollection.estimatedDocumentCount()
       const product = await menuCollection.estimatedDocumentCount()
